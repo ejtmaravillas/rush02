@@ -14,13 +14,18 @@ char	**ft_num_allocate(char *str);
 char	*ft_new_num(char *str);
 char	**ft_string_allocate(char *str);
 char	*ft_new_string(char *str);
+char *ft_itoa(int nbr);
+int ft_get_length(long nbr);
+int	check_error(char *str);
+void	ft_convert(char **dict_num, char **dict_string, char *input);
+int ft_get_zeroes(int nbr);
+int ft_atoi(char *str);
 
 int main(int argc, char **argv)
 {
 	char *out;
 	char **ref_num;
 	char **ref_string;
-	int i;
 
 	if((argc < 2) || (argc > 3))
 		return (0);
@@ -30,22 +35,30 @@ int main(int argc, char **argv)
 		{
 			out = read_dictionary("numbers");
 			ref_num = ft_num_allocate(out);
-			printf("%s\n",ref_num[30]);
-			ref_string = ft_string_allocate(out);
-			printf("%s\n",ref_string[30]);
-			i = 0;
-			printf("ARGV: %s\n",argv[1]);
-			while (ref_num[i] != NULL)
+			if (!ref_num)
 			{
-				printf("%d\n", (ft_strcmp(argv[1],ref_num[i]) == 0));
-				if (ft_strcmp(argv[1],ref_num[i]) == 0)
-				{
-					ft_putstr(ref_string[i]);
-					break ;
-				}
-				i++;
+				printf("Failed to allocate memory!\n");
+				return (0);
 			}
-			return (0);
+			ref_string = ft_string_allocate(out);
+			if (ref_string == NULL)
+			{
+				printf("Failed to allocate memory!\n");
+				return (0);
+			}
+			printf("REF_STRING: %s\n", ref_string[0]);
+			ft_convert(ref_num, ref_string, argv[1]);
+			// i = 0;
+			// while (ref_num[i] != NULL)
+			// {
+			// 	if (ft_strcmp(argv[1],ref_num[i]) == 0)
+			// 	{
+			// 		ft_putstr(ref_string[i]);
+			// 		break ;
+			// 	}
+			// 	i++;
+			// }
+			// return (0);
 		}
 		else
 			ft_putstr("Error\n");
@@ -156,6 +169,10 @@ char	**ft_string_allocate(char *str)
 		i++;
 	}
 	dict_string = (char **)malloc(sizeof(char *) * (string_count + 1));
+	if (!dict_string)
+	{
+		return (0);
+	}
 	i = 0;
 	while (*str)
 	{
@@ -220,6 +237,7 @@ int	check_error(char *str)
 	i = 0;
 	while (str[i] != '\0')
 	{
+		printf("STR: %c", str[i]);
 		if ((str[i] < '0') || (str[i] > '9'))
 			return (1);
 		i++;
@@ -229,28 +247,38 @@ int	check_error(char *str)
 
 void	ft_convert(char **dict_num, char **dict_string, char *input)
 {
-	int	nb;
+	int	nbr;
+	int count;
+	char *str;
 
-	nb = ft_atoi(input);
-	while(nb > 0)
+	printf("FT_CONVERT!\n");
+	nbr = ft_atoi(input);
+	count = 0;
+	while (nbr > 0)
 	{
-
+		while (dict_num[count] != NULL)
+		{
+			str = ft_itoa((nbr % 10) * ft_get_zeroes(nbr));
+			if (ft_strcmp(dict_num[count], str))
+				ft_putstr(dict_string[count]);
+			count++;
+		}
+		nbr /= 10;
 	}
 }
 
-int ft_get_zeroes(int nb)
+int ft_get_zeroes(int nbr)
 {
 	int digits;
 	int i;
 	int result;
-	int count;
 
 	i = 1;
 	digits = 0;
 	result = 1;
-	while ( nb != 0)
+	while ( nbr != 0)
 	{
-		nb /= 10;
+		nbr /= 10;
 		digits++;
 	}
 	while (i < digits)
@@ -261,3 +289,71 @@ int ft_get_zeroes(int nb)
 	return result;
 }
 
+char *ft_itoa(int nbr)
+{
+	char *str;
+	long n;
+	int i;
+
+	n = nbr;
+	i = ft_get_length(n);
+	str = (char *)malloc(sizeof(char) * (i + 1));
+	if (!*str)
+		return (0);
+	if (n == 0)
+	{
+		str[0] = 48;
+		return (str);
+	}
+	if (n < 0)
+	{
+		str[0] = '-';
+		n *= -1;
+	}
+	while (n > 0)
+	{
+		str[i] = (n % 10) + '0';
+		n = n / 10;
+		i--;
+	}
+	return (str);
+}
+
+int ft_get_length(long nbr)
+{
+	int length;
+
+	length = 0;
+	if (nbr < 0)
+	{
+		nbr *= -1;
+		length++;
+	}
+	while (nbr > 0)
+	{
+		nbr /= 10;
+		length++;
+	}
+	return (length);
+}
+
+int ft_atoi(char *str)
+{
+    int result;
+    int sign;
+    int count;
+
+	count = 0;
+	sign = 1;
+	result = 0;
+    while (str[count] != '\0')
+    {
+		if (str[count] == '-')
+			sign *= -1;
+		if ((str[count] >= '0') && (str[count] <= '9'))
+			result = (result * 10) + (str[count] - '0');
+		count++;
+    }
+	result = result * sign;
+	return (result);
+}
